@@ -1,7 +1,18 @@
 import os
 import shutil
+import subprocess
 
+import minify_html
+
+from scripts.check import check_dependencies
 from scripts.utils import err, info
+
+# check all dependencies
+if not check_dependencies():
+    err("Dependencies not met")
+    exit(1)
+
+print()
 
 # clean out directory
 if os.path.exists("out"):
@@ -46,3 +57,20 @@ copyDir("assets")
 copyFile("index.html")
 copyFile("favicon.ico")
 copyFile("robots.txt")
+
+# compress html files
+for root, dirs, files in os.walk("out"):
+    for file in files:
+        if file.endswith(".html"):
+            html_file = os.path.join(root, file)
+            minified_html = minify_html.minify(open(html_file).read())
+            open(html_file, "w").write(minified_html)
+            info(f"Minified {html_file}")
+
+# compress js files by terser
+for root, dirs, files in os.walk("out"):
+    for file in files:
+        if file.endswith(".js"):
+            js_file = os.path.join(root, file)
+            subprocess.run(["terser", js_file, "-o", js_file])
+            info(f"Minified {js_file}")

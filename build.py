@@ -1,6 +1,7 @@
 import os
 import shutil
 import subprocess
+import sys
 
 import minify_html
 
@@ -31,9 +32,21 @@ for root, dirs, files in os.walk("posts"):
             # create output directory if it doesn't exist
             os.makedirs(os.path.dirname(output_file), exist_ok=True)
             info(f"Compiling {compile_file}")
-            command = f"typst compile --features html --format html {compile_file} {output_file}"
-            info(f"Executing command: {command}")
-            os.system(command)
+            command = [
+                "typst",
+                "compile",
+                "--features",
+                "html",
+                "--format",
+                "html",
+                compile_file,
+                output_file,
+            ]
+            info(f"Executing command: {' '.join(command)}")
+            result = subprocess.run(command)
+            if result.returncode != 0:
+                err(f"Compilation failed for {compile_file}")
+                sys.exit(1)
 info("Compiled posts")
 
 
@@ -72,5 +85,8 @@ for root, dirs, files in os.walk("out"):
     for file in files:
         if file.endswith(".js"):
             js_file = os.path.join(root, file)
-            subprocess.run(["terser", js_file, "-o", js_file])
+            result = subprocess.run(["terser", js_file, "-o", js_file])
+            if result.returncode != 0:
+                err(f"Minification failed for {js_file}")
+                sys.exit(1)
             info(f"Minified {js_file}")

@@ -1,6 +1,6 @@
 import shutil
 
-from .utils import log
+from scripts.utils import log
 
 required_tools = ["terser", "typst"]
 

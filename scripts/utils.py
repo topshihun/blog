@@ -1,7 +1,6 @@
 import sys
 import time
 from datetime import datetime
-from typing import Callable
 
 from wcwidth import wcswidth
 
@@ -26,7 +25,7 @@ class Logger:
 
     def __init__(self):
         self.start_time = time.time()
-        self.task_count = 0
+
         self.completed_tasks = 0
         self.errors = 0
         self.warnings = 0
@@ -75,22 +74,6 @@ class Logger:
         if current == total:
             print()
 
-    def task(self, msg: str, status: str = "pending"):
-        """显示任务状态"""
-        if status == "pending":
-            print(f"{Colors.GRAY}○ {msg}{Colors.END}")
-        elif status == "running":
-            print(f"{Colors.CYAN}↻ {msg}{Colors.END}")
-        elif status == "success":
-            print(f"{Colors.GREEN}✓ {msg}{Colors.END}")
-            self.completed_tasks += 1
-        elif status == "failed":
-            print(f"{Colors.RED}✗ {msg}{Colors.END}")
-            self.errors += 1
-        elif status == "warning":
-            print(f"{Colors.YELLOW}⚠ {msg}{Colors.END}")
-            self.warnings += 1
-
     def step(self, step_num: int, total_steps: int, msg: str):
         """显示步骤"""
         print(f"{Colors.BOLD}{Colors.BLUE}[{step_num}/{total_steps}]{Colors.END} {msg}")
@@ -107,85 +90,6 @@ class Logger:
         else:
             print(f"{Colors.GRAY}[{timestamp}]{Colors.END}")
 
-    def time_taken(self):
-        """显示总耗时"""
-        elapsed = time.time() - self.start_time
-        if elapsed < 60:
-            time_str = f"{elapsed:.2f}秒"
-        else:
-            minutes = int(elapsed // 60)
-            seconds = elapsed % 60
-            time_str = f"{minutes}分{seconds:.2f}秒"
-
-        print(f"\n{Colors.BOLD}总耗时: {time_str}{Colors.END}")
-
-    def summary(self):
-        """显示构建摘要"""
-        print(f"\n{Colors.BOLD}{Colors.CYAN}构建摘要:{Colors.END}")
-        self.divider("─", 40)
-        print(f"{Colors.GREEN}✓ 完成的任务: {self.completed_tasks}{Colors.END}")
-        if self.warnings > 0:
-            print(f"{Colors.YELLOW}⚠ 警告: {self.warnings}{Colors.END}")
-        if self.errors > 0:
-            print(f"  {Colors.RED}✗ 错误: {self.errors} 个{Colors.END}")
-        self.time_taken()
-
-        if self.errors > 0:
-            return False
-        return True
-
 
 # 创建全局日志实例
 log = Logger()
-
-
-# 向后兼容的函数
-def info(msg: str):
-    """向后兼容的info函数"""
-    log.info(msg)
-
-
-def err(msg: str):
-    """向后兼容的err函数"""
-    log.error(msg)
-
-
-def greenPrint(msg: str):
-    """向后兼容的greenPrint函数"""
-    print(f"{Colors.GREEN}{msg}{Colors.END}")
-
-
-def redPrint(msg: str):
-    """向后兼容的redPrint函数"""
-    print(f"{Colors.RED}{msg}{Colors.END}")
-
-
-def with_spinner(func: Callable, message: str = "处理中..."):
-    """带旋转指示器的函数装饰器"""
-    import itertools
-    import threading
-
-    def spinner():
-        spinner_chars = itertools.cycle(
-            ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
-        )
-        while not done:
-            sys.stdout.write(
-                f"\r{Colors.CYAN}{next(spinner_chars)} {message}{Colors.END}"
-            )
-            sys.stdout.flush()
-            time.sleep(0.1)
-
-    done = False
-    spinner_thread = threading.Thread(target=spinner)
-    spinner_thread.start()
-
-    try:
-        result = func()
-    finally:
-        done = True
-        spinner_thread.join()
-        sys.stdout.write("\r" + " " * (len(message) + 2) + "\r")
-        sys.stdout.flush()
-
-    return result
